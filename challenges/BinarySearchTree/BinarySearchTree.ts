@@ -4,7 +4,7 @@ enum SideEnum {
   RIGHT = 'right',
 }
 type Side = SideEnum.LEFT | SideEnum.RIGHT
-
+type OrderType = 'in' | 'pre' | 'post'
 class NodeItem {
 
   data: ArgData
@@ -121,8 +121,13 @@ class BinarySearchTree {
       }
 
       if (onlyOneSubNode) {
-        let nNode = (parentNode && whichSide ? parentNode[whichSide] : this.root)
-        nNode = node?.left || node?.right
+        const uNode = node?.left || node?.right
+        if (parentNode && whichSide) {
+          parentNode[whichSide] = uNode
+        }
+        else {
+          this.root = uNode
+        }
       }
 
       if (gotBothSubNodes) {
@@ -133,7 +138,7 @@ class BinarySearchTree {
         // const oppositeSideValue = parentNode ? parentNode[oppositeSide]?.data : undefined
         // console.log(`gotBothSubNodes leftValue ${leftValue} rightValue ${rightValue} parentNodeValue ${parentNodeValue} oppositeSideValue ${oppositeSideValue}\n`,)
 
-        const leafNodes = this.findAllTheLeafNodes(foundValueWithNode)
+        const leafNodes = this.findAllTheLeafNodes(foundValueWithNode).leafNodes
 
         const minValue = leftValue || 0
         const maxValue = rightValue || 0
@@ -159,7 +164,7 @@ class BinarySearchTree {
     }
   }
 
-  findLowestBySide (node?: NodeItem, side?: Side) {
+  findDeepestNodeBySide (node?: NodeItem, side?: Side) {
     const tSide = side || 'left'
     let tNode = node
 
@@ -194,7 +199,89 @@ class BinarySearchTree {
       if (a.depth > b.depth) return -1
       return 1
     })
-    return leafNodes
+    const res = {
+      leafNodes,
+      countLeaves: leafNodes.length,
+      maxDepth: leafNodes[0]?.depth,
+    }
+    return res
+  }
+
+  getOrder ({
+    orderType,
+    fnType = 'iterative',
+  }: {
+    orderType: OrderType
+    fnType?: 'recursive' | 'iterative'
+  }) {
+    const res: ArgData[] = []
+    const inPre = orderType === 'pre'
+    const isIn = orderType === 'in'
+    const isPost = orderType === 'post'
+    const isRecursive = fnType === 'recursive'
+
+    const recursiveFn = (node?: NodeItem) => {
+      const pushLeft = () => node?.left && recursiveFn(node.left)
+      const pushData = () => node && res.push(node.data)
+      const pushRight = () => node?.right && recursiveFn(node.right)
+
+      if (inPre) {
+        pushData()
+        pushLeft()
+        pushRight()
+      }
+
+      if (isIn) {
+        pushLeft()
+        pushData()
+        pushRight()
+      }
+
+      if (isPost) {
+        pushLeft()
+        pushRight()
+        pushData()
+      }
+
+    }
+    const iterativeFn = () => {
+      if (inPre) {
+        const list = [this.root]
+        while (list.length) {
+          const node = list.pop()
+          node && res.push(node.data)
+          node?.right && list.push(node.right)
+          node?.left && list.push(node.left)
+        }
+      }
+
+      if (isIn) {
+        const list: NodeItem[] = []
+        let rNode = this.root
+        while (rNode || list.length) {
+          while (rNode) {
+            list.push(rNode)
+            rNode = rNode.left
+          }
+          rNode = list.pop()
+          rNode && res.push(rNode.data)
+          rNode = rNode?.right
+        }
+      }
+
+      if (isPost) {
+        const list = [this.root]
+        while (list.length) {
+          const node = list.pop()
+          node && res.unshift(node.data)
+          node?.left && list.push(node.left)
+          node?.right && list.push(node.right)
+        }
+      }
+    }
+
+    isRecursive ? recursiveFn(this.root) : iterativeFn()
+    return res
   }
 }
 
@@ -202,33 +289,27 @@ class BinarySearchTree {
   const bst = new BinarySearchTree()
   bst
     .insert(16)
-
-    // .insert(20)
-    .insert(11)
+    .insert(18)
+    .insert(17)
     .insert(9)
     .insert(10)
-
     .insert(8)
-
+    .insert(13)
     .insert(6)
     .insert(7)
-
-    .insert(13)
-    // .insert(12)
-    // .insert(11)
-    // .insert(16)
-    // .insert(17)
-    .insert(15)
-    .insert(14)
-
-    .insert(5)
-    .insert(4)
-    // .insert(19)
-    // .insert(6)
-    // .insert(18)
+    // .insert(13)
+    // .insert(15)
+    // .insert(14)
+    // .insert(5)
     // .insert(4)
+    // .insert(19)
+    // .insert(18)
   console.dir(bst.root, {depth: null, colors: true})
-  bst.remove(11)
+  // bst.remove(11)
   console.dir(bst.root, {depth: null, colors: true})
-  console.dir(bst.find(10), {depth: null, colors: true})
+  // console.dir(bst.find(10), {depth: null, colors: true})
+  console.info(bst.getOrder({
+    orderType: 'post',
+    fnType: 'iterative',
+  }))
 })()
