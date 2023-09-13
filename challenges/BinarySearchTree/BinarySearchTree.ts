@@ -215,7 +215,7 @@ class BinarySearchTree {
     fnType?: 'recursive' | 'iterative'
   }) {
     const res: ArgData[] = []
-    const inPre = orderType === 'pre'
+    const isPre = orderType === 'pre'
     const isIn = orderType === 'in'
     const isPost = orderType === 'post'
     const isRecursive = fnType === 'recursive'
@@ -225,7 +225,7 @@ class BinarySearchTree {
       const pushData = () => node && res.push(node.data)
       const pushRight = () => node?.right && recursiveFn(node.right)
 
-      if (inPre) {
+      if (isPre) {
         pushData()
         pushLeft()
         pushRight()
@@ -245,7 +245,7 @@ class BinarySearchTree {
 
     }
     const iterativeFn = () => {
-      if (inPre) {
+      if (isPre) {
         const list = [this.root]
         while (list.length) {
           const node = list.pop()
